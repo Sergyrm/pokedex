@@ -1,10 +1,10 @@
 package main
 
 import (
-	"strings"
-	"fmt"
 	"bufio"
+	"fmt"
 	"os"
+	"strings"
 )
 
 func startRepl() {
@@ -15,14 +15,21 @@ func startRepl() {
 		input.Scan()
 
 		inputString := input.Text()
-		cleanString := cleanInput(inputString)
+		commandName := cleanInput(inputString)
 
-		if len(cleanString) == 0 {
+		if len(commandName) == 0 {
 			continue
 		}
 
-		firstWord := cleanString[0]
-		fmt.Println("Your command was:", firstWord)
+		if command, ok := getCommands()[commandName[0]]; !ok {
+			fmt.Println("Unknown command")
+			continue
+		} else {
+			err := command.callback()
+			if err != nil {
+				fmt.Println("Error executing command:", command, err)
+			}
+		}
 	}
 }
 
@@ -31,4 +38,25 @@ func cleanInput(text string) []string {
 	splittedSlice := strings.Fields(text)
 
 	return splittedSlice
+}
+
+type cliCommand struct {
+	name        string
+	description string
+	callback    func() error
+}
+
+func getCommands() map[string]cliCommand {
+	return map[string]cliCommand{
+		"exit": {
+			name:        "exit",
+			description: "Exit the Pokedex",
+			callback:    commandExit,
+		},
+		"help": {
+			name:        "help",
+			description: "Displays a help message",
+			callback:    commandHelp,
+		},
+	}
 }
