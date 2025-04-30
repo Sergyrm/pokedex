@@ -5,22 +5,44 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"time"
+)
+
+const (
+	baseURL = "https://pokeapi.co/api/v2"
 )
 
 type Location struct {
-	Count    int    `json:"count"`
-	Next     string `json:"next"`
-	Previous string `json:"previous"`
-	Results  []struct {
+	Count    	int    `json:"count"`
+	Next    	*string `json:"next"`
+	Previous	*string `json:"previous"`
+	Results  	[]struct {
 		Name string `json:"name"`
 		URL  string `json:"url"`
 	} `json:"results"`
 }
 
-func getPokeApiData(url string) Location {
+type Client struct {
+	httpClient http.Client
+}
+
+func NewClient(timeout time.Duration) Client {
+	return Client{
+		httpClient: http.Client{
+			Timeout: timeout,
+		},
+	}
+}
+
+func (c *Client) GetLocationAreas(pageURL *string) (Location, error) {
+	url := baseURL + "/location-area"
+	if pageURL != nil {
+		url = *pageURL
+	}
+
 	res, err := http.Get(url)
 	if err != nil {
-		log.Fatal(err)
+		return Location{}, err
 	}
 	defer res.Body.Close()
 
@@ -29,14 +51,14 @@ func getPokeApiData(url string) Location {
 		log.Fatalf("Response failed with status code: %d and\nbody: %s\n", res.StatusCode, body)
 	}
 	if err != nil {
-		log.Fatal(err)
+		return Location{}, err
 	}
 
-	var location Location
+	location := Location{}
 	err = json.Unmarshal(body, &location)
 	if err != nil {
-		log.Fatal(err)
+		return Location{}, err
 	}
 
-	return location
+	return location, nil
 }

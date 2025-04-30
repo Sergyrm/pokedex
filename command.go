@@ -1,9 +1,9 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
-	"github.com/Sergyrm/pokedex/internal/pokeapi"
 )
 
 func commandExit(conf *config) error {
@@ -31,7 +31,36 @@ func commandHelp(conf *config) error {
 }
 
 func commandMap(conf *config) error {
-	location := getPokeApiData(conf.next)
-	fmt.Println(location)
+	location, err := conf.pokeapiClient.GetLocationAreas(conf.next)
+	if err != nil {
+		return err
+	}
+
+	conf.next = location.Next
+	conf.previous = location.Previous
+
+	for _, result := range location.Results {
+		fmt.Printf("%s\n", result.Name)
+	}
+
+	return nil
+}
+
+func commandMapb(conf *config) error {
+	if conf.previous == nil {
+		return errors.New("you're on the first page")
+	}
+	location, err := conf.pokeapiClient.GetLocationAreas(conf.previous)
+	if err != nil {
+		return err
+	}
+
+	conf.next = location.Next
+	conf.previous = location.Previous
+
+	for _, result := range location.Results {
+		fmt.Printf("%s\n", result.Name)
+	}
+
 	return nil
 }

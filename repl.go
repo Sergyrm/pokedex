@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/Sergyrm/pokedex/internal/pokeapi"
 )
 
-func startRepl() {
+func startRepl(conf *config) {
 	input := bufio.NewScanner(os.Stdin)
 
 	for {
@@ -25,8 +27,7 @@ func startRepl() {
 			fmt.Println("Unknown command")
 			continue
 		} else {
-			config := config{next: "", previous: ""}
-			err := command.callback(&config)
+			err := command.callback(conf)
 			if err != nil {
 				fmt.Println("Error executing command:", command, err)
 			}
@@ -48,8 +49,9 @@ type cliCommand struct {
 }
 
 type config struct {
-	next	 string
-	previous string
+	pokeapiClient    pokeapi.Client
+	next 			*string
+	previous 		*string
 }
 
 func getCommands() map[string]cliCommand {
@@ -67,12 +69,12 @@ func getCommands() map[string]cliCommand {
 		"map": {
 			name:        "map",
 			description: "Displays the next 20 locations of Pokemon World",
-			callback:    commandHelp,
+			callback:    commandMap,
 		},
 		"mapb": {
 			name:        "mapb",
 			description: "Displays the previous 20 locations of Pokemon World",
-			callback:    commandHelp,
+			callback:    commandMapb,
 		},
 	}
 }
