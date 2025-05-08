@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/Sergyrm/pokedex/internal/pokecache"
 )
 
 const (
@@ -13,10 +15,10 @@ const (
 )
 
 type Location struct {
-	Count    	int    `json:"count"`
-	Next    	*string `json:"next"`
-	Previous	*string `json:"previous"`
-	Results  	[]struct {
+	Count    int     `json:"count"`
+	Next     *string `json:"next"`
+	Previous *string `json:"previous"`
+	Results  []struct {
 		Name string `json:"name"`
 		URL  string `json:"url"`
 	} `json:"results"`
@@ -24,13 +26,17 @@ type Location struct {
 
 type Client struct {
 	httpClient http.Client
+	pokeCache  *pokecache.Cache
 }
 
 func NewClient(timeout time.Duration) Client {
+	cache := pokecache.NewCache(timeout)
+
 	return Client{
 		httpClient: http.Client{
 			Timeout: timeout,
 		},
+		pokeCache: &cache,
 	}
 }
 
@@ -38,6 +44,14 @@ func (c *Client) GetLocationAreas(pageURL *string) (Location, error) {
 	url := baseURL + "/location-area"
 	if pageURL != nil {
 		url = *pageURL
+	}
+
+	if cachedData, found := c.pokeCache.Get(url); found {
+		location := Location{}
+		err := json.Unmarshal(cachedData, &location)
+		if err == nil {
+			return location, nil
+		}
 	}
 
 	res, err := http.Get(url)
@@ -53,6 +67,8 @@ func (c *Client) GetLocationAreas(pageURL *string) (Location, error) {
 	if err != nil {
 		return Location{}, err
 	}
+
+	c.pokeCache.Add(url, body)
 
 	location := Location{}
 	err = json.Unmarshal(body, &location)
