@@ -99,6 +99,7 @@ func commandCatch(conf *config, params []string) error {
 	escapeRate := rand.Intn(pokemon.BaseExperience)
 
 	if escapeRate <= 40 {
+		conf.caughPokemon[pokemon.Name] = pokemon
 		fmt.Printf("%s was caught!\n", pokemon.Name)
 	} else {
 		fmt.Printf("%s escaped!\n", pokemon.Name)

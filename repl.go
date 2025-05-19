@@ -53,6 +53,7 @@ type config struct {
 	pokeapiClient    pokeapi.Client
 	next 			*string
 	previous 		*string
+	caughPokemon	map[string]pokeapi.Pokemon
 }
 
 func getCommands() map[string]cliCommand {
