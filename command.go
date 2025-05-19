@@ -98,11 +98,37 @@ func commandCatch(conf *config, params []string) error {
 
 	escapeRate := rand.Intn(pokemon.BaseExperience)
 
-	if escapeRate <= 40 {
-		conf.caughPokemon[pokemon.Name] = pokemon
-		fmt.Printf("%s was caught!\n", pokemon.Name)
-	} else {
+	if escapeRate > 40 {
 		fmt.Printf("%s escaped!\n", pokemon.Name)
+		return nil
+	}
+
+	fmt.Printf("%s was caught!\n", pokemon.Name)
+	conf.caughtPokemon[pokemon.Name] = pokemon
+
+	return nil
+}
+
+func commandInspect(conf *config, params []string) error {
+	if len(params) < 1 {
+		return errors.New("please provide a pokemon")
+	}
+
+	pokemon, ok := conf.caughtPokemon[params[0]]
+	if !ok {
+		return fmt.Errorf("you have not caught that pokemon")
+	}
+
+	fmt.Printf("Name: %s\n", pokemon.Name)
+	fmt.Printf("Height: %d\n", pokemon.Height)
+	fmt.Printf("Weight: %d\n", pokemon.Weight)
+	fmt.Println("Stats:")
+	for _, stat := range pokemon.Stats {
+		fmt.Printf("-%s: %d\n", stat.Stat.Name, stat.BaseStat)
+	}
+	fmt.Println("Types:")
+	for _, pokeType := range pokemon.Types {
+		fmt.Printf("- %s\n", pokeType.Type.Name)
 	}
 
 	return nil
